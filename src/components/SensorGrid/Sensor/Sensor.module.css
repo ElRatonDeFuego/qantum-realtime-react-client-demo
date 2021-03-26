@@ -1,0 +1,14 @@
+.sensor {
+  width: 85px;
+  height: 120px;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin: 10px;
+}
+
+.sensor-id {
+  font-size: 12px;
+  margin-top: 5px;
+}

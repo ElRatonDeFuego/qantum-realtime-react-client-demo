@@ -1,0 +1,50 @@
+#!/bin/bash
+
+cd `dirname $0`/..
+\rm -f ~/Projects/qantum/public/javascripts/realtime/build/* ~/Projects/qantum/public/stylesheets/realtime/build/*
+\cp -f build/static/js/*.js ~/Projects/qantum/public/javascripts/realtime/build/
+\cp -f build/static/css/*.css ~/Projects/qantum/public/stylesheets/realtime/build/
+export REALTIME_JS_FILES=$(find build/static/js/*.main.*.js -exec basename {} \; | sort | tr '\n' ',')
+export REALTIME_CSS_FILES=$(find build/static/css/main*.css -exec basename {} \; | tr '\n' ',')
+cd ~/Projects
+docker-compose stop qantum
+docker-compose up -d qantum
+cat << EOF
+
+--------------------------------------------------------------------------
+
+Make sure your ~/Projects/docker-compose.yml contains something like this:
+
+  qantum:
+    extends:
+      file: compose-env.yml
+      service: app_conf
+    image: docker-registry.qosenergy.com:5000/qantum-standalone
+    links:
+      - mysql
+      - sensor_engine
+    ports:
+      - 3000:3000
+    volumes:
+      - $HOME/Projects/qantum:/home/doqer/qantum
+      - ~/.irb_history:/home/doqer/.irb_history
+    environment:
+      STATSD_HOST: telegraf
+      CATEGORIZED_EVENTS_JS_FILES: \$CATEGORIZED_EVENTS_JS_FILES
+      CATEGORIZED_EVENTS_CSS_FILES: \$CATEGORIZED_EVENTS_CSS_FILES
+      REALTIME_JS_FILES: \$REALTIME_JS_FILES
+      REALTIME_CSS_FILES: \$REALTIME_CSS_FILES
+    entrypoint: "./docker/entrypoint.sh"
+    command: "bin/server"
+
+And your qantum project is on branch 6664-qng-events-react-event-logbook-integration
+
+If that's the case and this script ran successfully, you should be able to visit:
+
+http://localhost:3000/qv3/realtime
+
+If not, fix the issues and re-run this script.
+
+--------------------------------------------------------------------------
+
+EOF

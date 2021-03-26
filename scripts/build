@@ -1,0 +1,85 @@
+#!/usr/bin/env node
+
+/*!
+ * Copyright (C) QoS Energy
+ *
+ * All rights reserved
+ * https://www.qosenergy.com/terms-of-use
+ *
+ * All information contained herein is, and remains the property of
+ * QoS Energy and its suppliers, if any. The intellectual and technical
+ * concepts contained herein are proprietary to QoS Energy and its suppliers
+ * and may be covered by foreign patents, patents in process, and are
+ * protected by trade secret or copyright law. Dissemination of this
+ * information or reproduction of this material is strictly forbidden unless
+ * prior written permission is obtained from QoS Energy.
+ */
+
+const childProcess = require("child_process");
+const fs = require("fs");
+
+const run = (command) => {
+  const spawnedProcess = childProcess.spawnSync(command, { shell: true });
+
+  const stderr = spawnedProcess.stderr
+    ? spawnedProcess.stderr.toString().replace(/\n$/, "")
+    : "";
+
+  if (stderr) {
+    console.error(stderr);
+
+    process.exit(childProcess.status || 1);
+  }
+
+  return spawnedProcess.stdout
+    ? spawnedProcess.stdout.toString().replace(/\n$/, "")
+    : "";
+};
+
+console.log("Build in progress - please wait..\n");
+
+let buildOutput = run("$(npm bin)/react-scripts build").split("\n");
+
+run(`\\rm -f build/static/js/*.LICENSE.txt`);
+
+console.log(buildOutput.join("\n"));
+
+if (process.env.CI === "true") {
+  const indexHtml = fs.readFileSync("build/index.html");
+
+  const [, originalRuntimeBundle, runtimeHash] = indexHtml
+    .toString()
+    .match(/static\/js\/(runtime\-main\.(\w+)\.js)/);
+
+  const renamedRuntimeBundle = `0.000.main.runtime.${runtimeHash}.js`;
+
+  const [, originalVendorBundle, vendorHash] = indexHtml
+    .toString()
+    .match(/static\/js\/(\d+\.(\w+)\.chunk\.js)/);
+
+  const renamedVendorBundle = `0.001.main.vendor.${vendorHash}.js`;
+
+  const [, originalAppBundle, appHash] = indexHtml
+    .toString()
+    .match(/static\/js\/(main.(\w+)\.chunk\.js)/);
+
+  const renamedAppBundle = `zzz.main.app.${appHash}.js`;
+
+  [
+    `sed -i 's/"static\\/js\\/"/"javascripts\\/realtime\\/build\\/"/' build/static/js/*.js`,
+    `sed -i 's/"static\\/css\\/"/"stylesheets\\/realtime\\/build\\/"/' build/static/js/*.js build/static/css/*.css`,
+    `mv build/static/js/${originalRuntimeBundle} build/static/js/${renamedRuntimeBundle}`,
+    `mv build/static/js/${originalVendorBundle} build/static/js/${renamedVendorBundle}`,
+    `mv build/static/js/${originalAppBundle} build/static/js/${renamedAppBundle}`,
+    `sed -i -E 's/"\\/static\\/js\\/runtime-main\\.\\w+\\.js"/"\\/static\\/js\\/${renamedRuntimeBundle}"/' build/index.html build/static/js/*.js`,
+    `sed -i -E 's/"\\/static\\/js\\/${originalVendorBundle}"/"\\/static\\/js\\/${renamedVendorBundle}"/' build/index.html build/static/js/*.js`,
+    `sed -i -E 's/"\\/static\\/js\\/main\\.\\w+\\.chunk\\.js"/"\\/static\\/js\\/${renamedAppBundle}"/' build/index.html build/static/js/*.js`,
+  ].map(run);
+
+  console.log(
+    "Renamed files so that they are loaded in the correct order in Qantum:\n"
+  );
+  console.log(run("find build/static/js/*.js"));
+}
+
+console.log("\nBuild successful.\n");

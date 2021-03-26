@@ -1,0 +1,69 @@
+{
+  "name": "qantum-realtime-react-client-demo",
+  "version": "0.1.0",
+  "private": true,
+  "dependencies": {
+    "react": "^17.0.1",
+    "react-dom": "^17.0.1",
+    "react-minimal-pie-chart": "^8.0.1",
+    "react-scripts": "^4.0.3",
+    "socket.io-client": "^4.0.0",
+    "use-global-hook": "github:ElRatonDeFuego/use-global-hook#0.2.1-3",
+    "web-vitals": "^1.1.1"
+  },
+  "devDependencies": {
+    "@testing-library/jest-dom": "^5.11.5",
+    "@testing-library/react": "^11.1.0",
+    "@testing-library/user-event": "^13.0.10",
+    "@types/jest": "^26.0.15",
+    "@types/node": "^14.14.3",
+    "@types/react": "^17.0.3",
+    "@types/react-dom": "^17.0.3",
+    "@types/socket.io-client": "^1.4.34",
+    "@types/use-global-hook": "^0.1.3",
+    "husky": "^5.2.0",
+    "lint-staged": "^10.4.2",
+    "prettier": "^2.1.2",
+    "tslint": "^6.1.3",
+    "tslint-config-prettier": "^1.18.0",
+    "tslint-plugin-prettier": "^2.3.0",
+    "tslint-react": "^5.0.0",
+    "typescript": "^4.0.3"
+  },
+  "scripts": {
+    "build": "GENERATE_SOURCEMAP=false INLINE_RUNTIME_CHUNK=false scripts/build",
+    "build:ci": "CI=true npm run build",
+    "lint": "tslint --type-check -p . -c tslint.json 'src/**/*.{ts,tsx}' -e 'src/react-app-env.d.ts'",
+    "prebuild": "npm run lint",
+    "prerun-in-qantum": "npm run build:ci",
+    "prestart": "npm run lint",
+    "prettier": "prettier --write 'src/**/*.{ts,tsx}' package.json",
+    "run-in-qantum": "/bin/bash scripts/run-in-qantum",
+    "start": "BROWSER=none PORT=3007 react-scripts start",
+    "test": "react-scripts test",
+    "test:no-watch": "npm test -- --watchAll=false --runInBand"
+  },
+  "eslintConfig": {
+    "extends": [
+      "react-app",
+      "react-app/jest"
+    ]
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  },
+  "lint-staged": {
+    "*.{ts,tsx,md,json}": [
+      "prettier --write"
+    ]
+  }
+}
